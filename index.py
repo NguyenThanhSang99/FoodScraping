@@ -47,7 +47,7 @@ def initDriver():
                               )
     return driver
 
-def getInformation(driver, search_key, number_of_pages, fileName = 'food.csv'):
+def getInformation(driver, search_key, number_of_pages = 2):
     try:
         text_area = driver.find_element_by_id("query")
         text_area.send_keys(search_key)
