@@ -5,7 +5,7 @@ It only can run on Windows OS due to Chrome Driver setup.
 
 # Environment
 
-`python venv food`
+`python -m venv food`
 
 Run `env.bat` on Windows
 
@@ -21,4 +21,5 @@ Run `env.bat` on Windows
 
 # Run crawling facebook data
 
-Run `python index.py -s search_key -n number_of_pages`
+- Run a single meal: `python index.py -s search_key -n number_of_pages` <br>
+- Run a search key file: `python index.py -f fileName`

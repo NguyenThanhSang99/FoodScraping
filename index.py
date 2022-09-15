@@ -6,10 +6,19 @@ from time import sleep
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 
+# Write the scrawled data in file
 def writeFileTxt(fileName, content):
     with open(fileName, 'a', encoding="utf-8") as f1:
         f1.write(content + os.linesep)
 
+# Read the list of search keys from file
+def readData(fileName):
+    f = open(fileName, 'r', encoding='utf-8')
+    lines = f.readlines()
+    data = [line.rstrip() for line in lines if line.rstrip() != '']
+    return data
+
+# Initialize the chromedriver
 def initDriver():
     CHROMEDRIVER_PATH = './chromedriver.exe'
     WINDOW_SIZE = "1900,2500"
@@ -47,30 +56,32 @@ def initDriver():
                               )
     return driver
 
+# Collect all the data from naver.com
 def getInformation(driver, search_key, number_of_pages = 2):
     try:
-        text_area = driver.find_element_by_id("query")
-        text_area.send_keys(search_key)
-        text_area.send_keys(Keys.RETURN)
-        sleep(10)
-        link_list = driver.find_elements_by_xpath('//a[contains(@class, "lnk_tit")]')
+        main_page = "https://search.naver.com/search.naver?where=view&sm=tab_jum&query=" + search_key;
+        driver.get(main_page)
+        link_list = driver.find_elements_by_xpath('//a[contains(@class, "api_txt_lines total_tit")]')
         links = [link.get_attribute('href') for link in link_list]
-        print(links)
         count = 1
         for link in links:
             driver.get(link)
-            content_list = driver.find_elements_by_xpath('//p[contains(@class, "txt")]')
-            contents = [content.get_attribute('innerHTML') for content in content_list]
+            # Switch to frame to collect the data of a frame
+            driver.switch_to.frame("mainFrame")
+            content_list = driver.find_elements_by_xpath('//span[contains(@class, "se-fs- se-ff-")]')
+    
+            contents = [content.text.strip() for content in content_list if content.text.strip() != '']
+
             fileName = "dataset/" + search_key + "-" + str(count) + ".txt"
+            
             writeFileTxt(fileName,"\n".join(contents))
-            sleep(10)
             if (count == number_of_pages): 
                 break
             count += 1
-        return True
     except Exception as err:
         print("Error getting food information: ", err)
 
+# Check wheather the driver is launched well
 def checkLive(driver):
     try:
         driver.get("https://www.naver.com/")
@@ -87,14 +98,32 @@ def checkLive(driver):
 def main(argv):
     pageName = ''
     totalPost = 0
+
+    # Initialize the chrome driver
+    driver = initDriver()
+
+    # Check the browser initialization
+    isLive = checkLive(driver)
+
+    if (not isLive):
+        return
+
     try:
-        opts, args = getopt.getopt(argv,"hs:n:",["skey=","npage="])
+        opts, args = getopt.getopt(argv,"hf:s:n:",["fName", "skey=", "npage="])
     except getopt.GetoptError:
-        print('python index.py -s <search> -n <number of pages>')
+        print('python index.py -f <data file> -s <search key> -n <number of pages>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('python index.py -s <search key> -n <number of pages>')
+            print('python index.py -f <data file> -s <search key> -n <number of pages>')
+            sys.exit()
+        elif opt == '-f':
+            fileName = arg
+            list_search_keys = readData(fileName)
+            for search_key in list_search_keys:
+                print("Search key: ", search_key)
+                getInformation(driver, search_key, 2)
+                
             sys.exit()
         elif opt in ("-s", "--skey"):
             search_key = arg
@@ -102,10 +131,6 @@ def main(argv):
             number_pages = int(arg)
 
     print("Search key: ", search_key)
-
-    driver = initDriver()
-
-    isLive = checkLive(driver)
 
     if (isLive):
         getInformation(driver, search_key, number_pages)
