@@ -13,7 +13,7 @@ def writeFileTxt(fileName, content):
 
 # Read the list of search keys from file
 def readData(fileName):
-    f = open(fileName, 'r', encoding='utf-8')
+    f = open(fileName, 'r', encoding='cp949')
     lines = f.readlines()
     data = [line.rstrip() for line in lines if line.rstrip() != '']
     return data
@@ -81,7 +81,7 @@ def getInformation(driver, search_key, number_of_pages = 2):
     except Exception as err:
         print("Error getting food information: ", err)
 
-# Check wheather the driver is launched well
+# Check whether the driver is launched well
 def checkLive(driver):
     try:
         driver.get("https://www.naver.com/")
